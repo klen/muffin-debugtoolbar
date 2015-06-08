@@ -1,0 +1,16 @@
+
+<!-- DebugToolbar -->
+<script type="text/javascript">
+    var fileref=document.createElement("link")
+    fileref.setAttribute("rel", "stylesheet")
+    fileref.setAttribute("type", "text/css")
+    fileref.setAttribute("href", "{{ static_path }}/css/toolbar.css")
+    document.getElementsByTagName("head")[0].appendChild(fileref)
+</script>
+
+<div id="pDebug">
+    <div style="display: block; {{ button_style }}" id="pDebugToolbarHandle">
+        <a title="Show Toolbar" id="pShowToolBarButton" href="{{ toolbar_url }}" target="pDebugToolbar">&#171;
+           FIXME: Debug Toolbar</a>
+    </div>
+</div>

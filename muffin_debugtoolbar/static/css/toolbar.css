@@ -1,0 +1,76 @@
+._200 {
+    background-color: #468847;
+}
+._500 {
+    background-color: #b94a48;
+}
+._404{
+    background-color: #3a87ad;
+}
+
+.switch {
+    font-size: 10px;
+    display: block;
+    color: white;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+}
+
+.switch.active {
+    background-image: url(../img/tick.png);
+}
+
+.switch.inactive{
+    background-image: url(../img/tick-red.png);
+}
+
+li.nav-label {
+    position: relative;
+    display: block;
+    padding: 10px 15px 10px 0px;
+}
+
+li.nav-label strong {
+    font-size: 150%;
+}
+a.active {
+    background: #fff;
+}
+
+#pDebug #pDebugToolbarHandle {
+    position:fixed;
+    border:2px solid #e28d29;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border-right:none;
+    top: 25%;
+    right:0;
+    z-index:100000000;
+    background-size:40px 40px;
+    background-image:url(../img/muffin.png);
+    background-position: left center;
+    background-repeat: no-repeat;
+}
+
+@media print {
+    #pDebug {
+        display: none;
+    }
+}
+
+#pDebug a#pShowToolBarButton {
+    display:block;
+    height:40px;
+    width:25px;
+    color:#fff;
+    text-indent:-999999px;
+    opacity:0.8;
+    filter:alpha(opacity=80);
+}
+
+#pDebug a#pShowToolBarButton:hover {
+    padding-right: 15px;
+    border-color:#e28d29;
+    opacity:1.0;
+}

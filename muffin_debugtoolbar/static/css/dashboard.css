@@ -1,0 +1,181 @@
+/*
+ * Base structure
+ */
+
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 70px;
+}
+
+a {
+    color: #e28d29;
+}
+
+a:hover {
+    color: #c56b00;
+}
+
+.navbar-collapse {
+    border-color: #e28d29;
+}
+
+/*
+.navbar-inner {
+    background-color:  #dd7c0d;
+    background-image: linear-gradient(left, #dd7c0d, #dbc1a4;
+    background-image: -moz-linear-gradient(left, #dd7c0d, #dbc1a4;
+    background-image: -ms-linear-gradient(left, #dd7c0d, #dbc1a4;
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#dd7c0d), to(#dbc1a4);
+    background-image: -webkit-linear-gradient(left, #dd7c0d, #dbc1a4;
+    background-image: -o-linear-gradient(left, #dd7c0d, #dbc1a4;
+}
+*/
+
+ .navbar-inverse {
+    background: #dd7c0d; /* Old browsers */
+    background: -moz-linear-gradient(left, #dd7c0d 0%, #c99662 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, right top, color-stop(0%,#dd7c0d), color-stop(100%,#c99662)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(left, #dd7c0d 0%,#c99662 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(left, #dd7c0d 0%,#c99662 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(left, #dd7c0d 0%,#c99662 100%); /* IE10+ */
+    background: linear-gradient(to right, #dd7c0d 0%,#c99662 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dd7c0d', endColorstr='#c99662',GradientType=1 ); /* IE6-9 */
+}
+
+.navbar-inverse .navbar-brand, .navbar-inverse .navbar-nav > li > a {
+    color: #fff;
+}
+
+.navbar-inverse .navbar-nav > .active > a,
+.navbar-inverse .navbar-nav > .active > a:hover,
+.navbar-inverse .navbar-nav > .active > a:focus,
+
+.navbar-inverse .navbar-nav > .open > a,
+.navbar-inverse .navbar-nav > .open > a:hover,
+.navbar-inverse .navbar-nav > .open > a:focus,
+
+.navbar-inverse .navbar-nav > li.active > a,
+.navbar-inverse .navbar-nav > li.active:hover > a {
+    background-color: #c56b00;
+}
+
+.navbar-brand > img {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 35px;
+    height: 35px;
+}
+
+.navbar-brand {
+    padding-left: 50px;
+}
+
+/*
+ * Global add-ons
+ */
+
+.sub-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+
+/*
+ * Sidebar
+ */
+
+/* Hide for mobile, show later */
+.sidebar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .navbar-nav {
+    float: right!important;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: block;
+    padding: 70px 20px 20px;
+    background-color: #eee;
+    border-right: 1px solid #eee;
+    overflow-y: scroll;
+  }
+}
+
+/* Sidebar navigation */
+.nav-sidebar {
+  margin-left: -20px;
+  margin-right: -21px; /* 20px padding + 1px border */
+  margin-bottom: 20px;
+}
+.nav-sidebar > li > h4, .nav-sidebar > li > a {
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 100%;
+}
+.nav-sidebar > li > a {
+  color: #555;
+}
+.nav-sidebar > .active > a {
+  color: #fff;
+  background: #999;
+}
+.nav-sidebar > .active:hover > a {
+  background: #999;
+}
+
+/*
+ * Main content
+ */
+
+.main {
+  padding: 0px 20px 20px 20px;
+}
+@media (min-width: 768px) {
+  .main {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+.main .page-header {
+  margin-top: 0;
+}
+
+
+/*
+ * Placeholder dashboard ideas
+ */
+
+.placeholders {
+  margin-bottom: 30px;
+  text-align: center;
+}
+.placeholders h4 {
+  margin-bottom: 0;
+}
+.placeholder {
+  margin-bottom: 20px;
+}
+.placeholder img {
+  border-radius: 50%;
+}
+ul#requests li a {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 300px;
+}
+/* override twitter bootstrap's tooltip styles */
+.tooltip, .tooltip-inner {
+    max-width: 100%;
+}
+.tooltip {
+    word-wrap: break-word;
+    word-break: break-all;
+}

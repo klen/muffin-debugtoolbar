@@ -1,0 +1,14 @@
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Middleware</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for middleware in middlewares %}
+			<tr class="{{ loop.index%2 and 'pDebugEven' or 'pDebugOdd' }}">
+				<td>{{ middleware|e }}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
