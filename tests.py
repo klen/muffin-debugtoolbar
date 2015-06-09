@@ -14,12 +14,19 @@ def app(loop):
     def index(request):
         return '<body>Hello, World!</body>'
 
+    @app.register('/raise')
+    def exc(request):
+        return 1 / 0
+
     return app
 
 
 def test_debugtoolbar(client):
     response = client.get('/')
     assert "DebugToolbar" in response.text
+
+    response = client.get('/raise')
+    assert 'Traceback' in response.text
 
     response = client.get('/_debug')
     assert 'History' in response.text

@@ -16,6 +16,7 @@
 	</tbody>
 </table>
 
+{% if response_headers %}
 <h4>Response Headers</h4>
 <table class="table table-striped">
 	<thead>
@@ -33,3 +34,4 @@
 		{% endfor %}
 	</tbody>
 </table>
+{% endif %}

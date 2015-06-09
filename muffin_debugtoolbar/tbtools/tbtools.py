@@ -374,7 +374,7 @@ class Frame(object):
 
         if source is None:
             try:
-                f = open(self.filename)
+                f = codecs.open(self.filename, 'r', 'utf-8')
             except IOError:
                 return []
             try:
@@ -382,31 +382,7 @@ class Frame(object):
             finally:
                 f.close()
 
-        # already unicode?  return right away
-        if isinstance(source, str):
-            return source.splitlines()
-
-        # yes. it should be ascii, but we don't want to reject too many
-        # characters in the debugger if something breaks
-        charset = 'utf-8'
-        if source.startswith(UTF8_COOKIE):
-            source = source[3:]
-        else:
-            for idx, match in enumerate(_line_re.finditer(source)):
-                match = _line_re.search(match.group())
-                if match is not None:
-                    charset = match.group(1)
-                    break
-                if idx > 1:
-                    break
-
-        # on broken cookies we fall back to utf-8 too
-        try:
-            codecs.lookup(charset)
-        except LookupError:
-            charset = 'utf-8'
-
-        return source.decode(charset, 'replace').splitlines()
+        return source.splitlines()
 
     @property
     def current_line(self):

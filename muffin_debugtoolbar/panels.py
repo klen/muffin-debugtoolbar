@@ -75,6 +75,7 @@ class HeaderDebugPanel(DebugPanel):
         """ Store current requests headers. """
         super().__init__(app, request)
         self.request_headers = [(k, v) for k, v in sorted(request.headers.items())]
+        self.response_headers = None
 
     @asyncio.coroutine
     def process_response(self, response):
