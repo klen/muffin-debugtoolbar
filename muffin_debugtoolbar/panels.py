@@ -100,7 +100,7 @@ class RoutesDebugPanel(DebugPanel):
         router = app.router
 
         for route in router._urls:
-            if route.name.startswith('debugtoolbar.'):
+            if not route.name or route.name.startswith('debugtoolbar.'):
                 continue
             pattern = None
             if isinstance(route, web.DynamicRoute):
