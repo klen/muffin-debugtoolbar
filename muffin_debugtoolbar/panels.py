@@ -1,7 +1,10 @@
 """ Debug panels. """
 import asyncio
 import platform
+import datetime as dt
+import os
 import re
+import logging
 from html import escape
 from operator import itemgetter
 from pprint import saferepr
@@ -11,6 +14,7 @@ from aiohttp import web
 from muffin import __version__ as muffin_version
 
 from .tbtools.tbtools import Traceback
+from .utils import LoggingTrackingHandler
 
 
 class DebugPanel:
@@ -41,6 +45,9 @@ class DebugPanel:
         """ Get a navigation title. """
         return self.title
 
+    def wrap_handler(self, handler, context_switcher):
+        return handler
+
     @asyncio.coroutine
     def process_response(self, response):
         """ Process a response. """
@@ -58,10 +65,6 @@ class DebugPanel:
     def render_vars(self):
         """ Template Context. """
         return {}
-
-    def wrap_handler(self, handler):
-        """ Wrap handler. """
-        return handler
 
 
 class HeaderDebugPanel(DebugPanel):
@@ -240,6 +243,39 @@ class TracebackDebugPanel(DebugPanel):
             'url': '',
             'static_path': app.ps.debugtoolbar.options.prefix + 'static/',
             'root_path': app.ps.debugtoolbar.options.prefix,
+        }
+
+
+class LoggingDebugPanel(DebugPanel):
+
+    name = 'Logging'
+    template = 'debugtoolbar/panels/logging.html'
+
+    def __init__(self, app, request=None):
+        super(LoggingDebugPanel, self).__init__(app, request)
+        self.handler = LoggingTrackingHandler()
+
+    @property
+    def has_content(self):
+        return self.handler.records
+
+    def wrap_handler(self, handler, context_switcher):
+        context_switcher.add_context_in(lambda: logging.root.addHandler(self.handler))
+        context_switcher.add_context_out(lambda: logging.root.removeHandler(self.handler))
+        return handler
+
+    def render_vars(self):
+        return {
+            'records': [
+                {
+                    'message': record.getMessage(),
+                    'time': dt.datetime.fromtimestamp(record.created).strftime('%H:%M:%S'),
+                    'level': record.levelname,
+                    'file': os.path.relpath(record.pathname),
+                    'file_long': record.pathname,
+                    'line': record.lineno,
+                } for record in self.handler.records
+            ]
         }
 
 

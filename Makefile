@@ -81,4 +81,4 @@ t: test
 
 .PHONY: run
 run: $(VIRTUALENV)/bin/py.test
-	@muffin example run
+	@muffin example run --timeout=600

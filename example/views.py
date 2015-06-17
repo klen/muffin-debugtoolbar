@@ -1,9 +1,12 @@
 from example import app, muffin
+import logging
 
 
 @app.register('/')
 def index(request):
     """ Just sample. """
+    logging.warn('logging message')
+    yield from request.read()
     return (
         "<body>"
         "Hello, World!"

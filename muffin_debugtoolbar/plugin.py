@@ -36,6 +36,7 @@ class Plugin(BasePlugin):
         'panels': [
             panels.HeaderDebugPanel,
             panels.RequestVarsDebugPanel,
+            panels.LoggingDebugPanel,
             panels.TracebackDebugPanel,
         ],
         'global_panels': [
@@ -94,6 +95,8 @@ class Plugin(BasePlugin):
         @asyncio.coroutine
         def middleware(request):
             """ Integrate to application. """
+
+            # Check for debugtoolbar is enabled for the request
             if not self.options.enabled or any(map(request.path.startswith, self.options.exclude)):
                 return (yield from handler(request))
 
@@ -104,16 +107,21 @@ class Plugin(BasePlugin):
             else:
                 return (yield from handler(request))
 
+            # Initialize a debugstate for the request
             state = DebugState(self.app, request)
             self.history[state.id] = state
+            context_switcher = state.wrap_handler(handler)
 
+            # Make response
             try:
-                response = yield from handler(request)
+                response = yield from context_switcher(handler(request))
                 state.status = response.status
             except HTTPException as exc:
                 response = exc
                 state.status = response.status
+
             except Exception as exc:
+                # Store traceback for unhandled exception
                 state.status = 500
                 if not self.options.intercept_exc:
                     raise
@@ -259,6 +267,12 @@ class DebugState:
                 'path': self.request.path,
                 'scheme': 'http',
                 'status_code': self.status}
+
+    def wrap_handler(self, handler):
+        context_switcher = utils.ContextSwitcher()
+        for panel in self.panels:
+            panel.wrap_handler(handler, context_switcher)
+        return context_switcher
 
     @asyncio.coroutine
     def process_response(self, response):
