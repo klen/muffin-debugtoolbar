@@ -57,7 +57,9 @@ class DebugPanel:
         """ Render the panel's content. """
         if not self.has_content:
             return ""
-        template = self.app.ps.jinja2.env.get_template(self.template)
+        template = self.template
+        if isinstance(self.template, str):
+            template = self.app.ps.jinja2.env.get_template(self.template)
         context = self.render_vars()
         content = template.render(app=self.app, request=self.request, **context)
         return content
@@ -254,6 +256,11 @@ class LoggingDebugPanel(DebugPanel):
     def __init__(self, app, request=None):
         super(LoggingDebugPanel, self).__init__(app, request)
         self.handler = LoggingTrackingHandler()
+
+    @property
+    def nav_title(self):
+        """ Get a navigation title. """
+        return "%s (%s) " % (self.title, len(self.handler.records))
 
     @property
     def has_content(self):

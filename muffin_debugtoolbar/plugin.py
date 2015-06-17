@@ -1,6 +1,7 @@
 """ Debug Toolbar Plugin. """
 
 import asyncio
+import importlib
 import ipaddress as ip
 import os.path as op
 import uuid
@@ -39,6 +40,7 @@ class Plugin(BasePlugin):
             panels.LoggingDebugPanel,
             panels.TracebackDebugPanel,
         ],
+        'additional_panels': [],
         'global_panels': [
             panels.RoutesDebugPanel,
             panels.ConfigurationDebugPanel,
@@ -59,6 +61,16 @@ class Plugin(BasePlugin):
 
         # Setup debugtoolbar templates
         app.ps.jinja2.options.template_folders.append(op.join(PLUGIN_ROOT, 'templates'))
+
+        self.options.panels += list(self.options.additional_panels)
+        panels = []
+        for panel in self.options.panels:
+            if isinstance(panel, str):
+                mod, _, panel = panel.partition(':')
+                mod = importlib.import_module(mod)
+                panel = eval(panel or 'DebugPanel', mod.__dict__)
+            panels.append(panel)
+        self.options.panels = panels
 
         # Setup debugtoolbar static files
         app.router.register_route(StaticRoute(
