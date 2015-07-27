@@ -30,7 +30,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{{ debugtoolbar.options.prefix }}">Muffin Debug Toolbar</a>
+          <a class="navbar-brand" href="{{ debugtoolbar.cfg.prefix }}">Muffin Debug Toolbar</a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
@@ -84,12 +84,12 @@
                 var details = item[1];
                 var request_id = item[0];
                 var active = item[2];
-                url = '{{ debugtoolbar.options.prefix }}' + request_id;
+                url = '{{ debugtoolbar.cfg.prefix }}' + request_id;
                 if (url == location.pathname){
                     active = 'active'
                 }
 
-                html += '<li class="'+active+'"><a href="{{ debugtoolbar.options.prefix }}' + request_id+'" title="'+details.path+'">';
+                html += '<li class="'+active+'"><a href="{{ debugtoolbar.cfg.prefix }}' + request_id+'" title="'+details.path+'">';
                 html += '<span class="badge pull-right _'+details.status_code+'">'+details.status_code+'</span>';
                 html += details.method;
                 if (details.scheme == 'https'){
@@ -111,7 +111,7 @@
                 source.close();
             }
 
-            source = new EventSource('{{ debugtoolbar.options.prefix }}sse?request_id={{ state.id }}');
+            source = new EventSource('{{ debugtoolbar.cfg.prefix }}sse?request_id={{ state.id }}');
             source.addEventListener('new_request', new_request);
         }
 

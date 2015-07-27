@@ -231,13 +231,13 @@ class Traceback:
     def render_full(self, request, lodgeit_url=None):
         """Render the Full HTML page with the traceback info."""
         app = request.app
-        root_path = request.app.ps.debugtoolbar.options.prefix
+        root_path = request.app.ps.debugtoolbar.cfg.prefix
         exc = escape(self.exception)
         summary = self.render_summary(include_title=False, request=request)
         token = request.app['debugtoolbar']['pdbt_token']
 
         vars = {
-            'evalex': app.ps.debugtoolbar.options.intercept_exc == 'debug' and 'true' or 'false',
+            'evalex': app.ps.debugtoolbar.cfg.intercept_exc == 'debug' and 'true' or 'false',
             'console': 'console',
             'lodgeit_url': lodgeit_url and escape(lodgeit_url) or '',
             'title': exc,

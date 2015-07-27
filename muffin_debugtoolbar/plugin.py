@@ -56,39 +56,39 @@ class Plugin(BasePlugin):
         if 'jinja2' not in app.plugins:
             raise PluginException('The plugin requires Muffin-Jinja2 plugin installed.')
 
-        self.options.prefix = self.options.prefix.rstrip('/') + '/'
-        self.options.exclude.append(self.options.prefix)
+        self.cfg.prefix = self.cfg.prefix.rstrip('/') + '/'
+        self.cfg.exclude.append(self.cfg.prefix)
 
         # Setup debugtoolbar templates
-        app.ps.jinja2.options.template_folders.append(op.join(PLUGIN_ROOT, 'templates'))
+        app.ps.jinja2.cfg.template_folders.append(op.join(PLUGIN_ROOT, 'templates'))
 
-        self.options.panels += list(self.options.additional_panels)
+        self.cfg.panels += list(self.cfg.additional_panels)
         panels = []
-        for panel in self.options.panels:
+        for panel in self.cfg.panels:
             if isinstance(panel, str):
                 mod, _, panel = panel.partition(':')
                 mod = importlib.import_module(mod)
                 panel = eval(panel or 'DebugPanel', mod.__dict__)
             panels.append(panel)
-        self.options.panels = panels
+        self.cfg.panels = panels
 
         # Setup debugtoolbar static files
         app.router.register_route(StaticRoute(
             'debugtoolbar.static',
-            self.options.prefix + 'static/',
+            self.cfg.prefix + 'static/',
             op.join(PLUGIN_ROOT, 'static')))
 
-        app.register(self.options.prefix + 'sse', name='debugtoolbar.sse')(self.sse)
+        app.register(self.cfg.prefix + 'sse', name='debugtoolbar.sse')(self.sse)
         app.register(
-            self.options.prefix + 'exception', name='debugtoolbar.exception')(self.exception)
+            self.cfg.prefix + 'exception', name='debugtoolbar.exception')(self.exception)
         app.register(
-            self.options.prefix + 'execute', name='debugtoolbar.execute')(self.execute)
+            self.cfg.prefix + 'execute', name='debugtoolbar.execute')(self.execute)
         app.register(
-            self.options.prefix + 'source', name='debugtoolbar.source')(self.source)
+            self.cfg.prefix + 'source', name='debugtoolbar.source')(self.source)
         app.register(
-            self.options.prefix.rstrip('/'),
-            self.options.prefix,
-            self.options.prefix + '{request_id}', name='debugtoolbar.request')(self.view)
+            self.cfg.prefix.rstrip('/'),
+            self.cfg.prefix,
+            self.cfg.prefix + '{request_id}', name='debugtoolbar.request')(self.view)
 
         app['debugtoolbar'] = {}
         app['debugtoolbar']['pdbt_token'] = uuid.uuid4().hex
@@ -99,7 +99,7 @@ class Plugin(BasePlugin):
     @asyncio.coroutine
     def start(self, app):
         """ Start application. """
-        self.global_panels = [Panel(self.app) for Panel in self.options.global_panels]
+        self.global_panels = [Panel(self.app) for Panel in self.cfg.global_panels]
 
     @asyncio.coroutine
     def middleware_factory(self, app, handler):
@@ -109,11 +109,11 @@ class Plugin(BasePlugin):
             """ Integrate to application. """
 
             # Check for debugtoolbar is enabled for the request
-            if not self.options.enabled or any(map(request.path.startswith, self.options.exclude)):
+            if not self.cfg.enabled or any(map(request.path.startswith, self.cfg.exclude)):
                 return (yield from handler(request))
 
             remote_host, remote_port = request.transport.get_extra_info('peername')
-            for host in self.options.hosts:
+            for host in self.cfg.hosts:
                 if ip.ip_address(remote_host) in ip.ip_network(host):
                     break
             else:
@@ -135,7 +135,7 @@ class Plugin(BasePlugin):
             except Exception as exc:
                 # Store traceback for unhandled exception
                 state.status = 500
-                if not self.options.intercept_exc:
+                if not self.cfg.intercept_exc:
                     raise
                 tb = get_traceback(
                     info=sys.exc_info(), skip=1, show_hidden_frames=False,
@@ -146,7 +146,7 @@ class Plugin(BasePlugin):
                 response = Response(text=tb.render_full(request), content_type='text/html')
 
             # Intercept http redirect codes and display an html page with a link to the target.
-            if self.options.intercept_redirects and response.status in REDIRECT_CODES \
+            if self.cfg.intercept_redirects and response.status in REDIRECT_CODES \
                     and response.location:
 
                 response = yield from self.app.ps.jinja2.render(
@@ -167,8 +167,8 @@ class Plugin(BasePlugin):
         """ Inject Debug Toolbar code to response body. """
         html = yield from self.app.ps.jinja2.render(
             'debugtoolbar/inject.html',
-            static_path=self.options.prefix + 'static',
-            toolbar_url=self.options.prefix + state.id,
+            static_path=self.cfg.prefix + 'static',
+            toolbar_url=self.cfg.prefix + state.id,
         )
         html = html.encode(state.request.charset or 'utf-8')
         response.body = RE_BODY.sub(html + b'</body>', response.body)
@@ -184,7 +184,7 @@ class Plugin(BasePlugin):
             'debugtoolbar/toolbar.html',
             debugtoolbar=self,
             state=state,
-            static_path=self.options.prefix + 'static',
+            static_path=self.cfg.prefix + 'static',
             panels=state and state.panels or [],
             global_panels=self.global_panels,
             request=state and state.request or None,
@@ -241,7 +241,7 @@ class Plugin(BasePlugin):
     @asyncio.coroutine
     def execute(self, request):
         self.validate_pdtb_token(request)
-        if not self.options.intercept_exc == 'debug':
+        if not self.cfg.intercept_exc == 'debug':
             raise HTTPBadRequest()
         cmd = request.GET.get('cmd')
         if not cmd:
@@ -265,7 +265,7 @@ class DebugState:
         """ Store the params. """
         self.request = request
         self.status = 200
-        self.panels = [Panel(app, request) for Panel in app.ps.debugtoolbar.options.panels]
+        self.panels = [Panel(app, request) for Panel in app.ps.debugtoolbar.cfg.panels]
 
     @property
     def id(self):

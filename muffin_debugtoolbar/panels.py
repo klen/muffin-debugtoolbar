@@ -231,7 +231,7 @@ class TracebackDebugPanel(DebugPanel):
         token = self.request.app['debugtoolbar']['pdbt_token']
         app = self.request.app
         return {
-            'evalex': app.ps.debugtoolbar.options.intercept_exc == 'debug' and 'true' or 'false',
+            'evalex': app.ps.debugtoolbar.cfg.intercept_exc == 'debug' and 'true' or 'false',
             'console': 'false',
             'lodgeit_url': None,
             'title': exc,
@@ -243,8 +243,8 @@ class TracebackDebugPanel(DebugPanel):
             'traceback_id': tb.id,
             'token': token,
             'url': '',
-            'static_path': app.ps.debugtoolbar.options.prefix + 'static/',
-            'root_path': app.ps.debugtoolbar.options.prefix,
+            'static_path': app.ps.debugtoolbar.cfg.prefix + 'static/',
+            'root_path': app.ps.debugtoolbar.cfg.prefix,
         }
 
 
