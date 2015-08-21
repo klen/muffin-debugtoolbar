@@ -147,7 +147,7 @@ class Plugin(BasePlugin):
 
             # Intercept http redirect codes and display an html page with a link to the target.
             if self.cfg.intercept_redirects and response.status in REDIRECT_CODES \
-                    and response.location:
+                    and 'Location' in response.headers:
 
                 response = yield from self.app.ps.jinja2.render(
                     'debugtoolbar/redirect.html', response=response)

@@ -4,7 +4,7 @@
     </head>
     <body>
         <h1>Redirect ({{ response.status }})</h1>
-        <p>Location: <a href="{{ response.location }}">{{ response.location }}</a></p>
+        <p>Location: <a href="{{ response.headers['Location'] }}">{{ response.headers['Location'] }}</a></p>
         <p class="notice">
 
             The Debug Toolbar has intercepted a redirect to the above URL for
