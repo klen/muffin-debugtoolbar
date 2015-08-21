@@ -155,7 +155,8 @@ class Plugin(BasePlugin):
 
             yield from state.process_response(response)
 
-            if isinstance(response, Response) and RE_BODY.search(response.body):
+            if isinstance(response, Response) and response.content_type == 'text/html' and \
+                    RE_BODY.search(response.body):
                 return (yield from self.inject(state, response))
 
             return response
