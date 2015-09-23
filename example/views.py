@@ -1,5 +1,6 @@
-from example import app, muffin
 import logging
+
+from example import app, muffin
 
 
 @app.register('/')

@@ -1,10 +1,10 @@
-""" Debug panels. """
+"""Debug panels."""
 import asyncio
-import platform
 import datetime as dt
-import os
-import re
 import logging
+import os
+import platform
+import re
 from html import escape
 from operator import itemgetter
 from pprint import saferepr
@@ -19,14 +19,14 @@ from .utils import LoggingTrackingHandler
 
 class DebugPanel:
 
-    """ Base class for debug panels. """
+    """Base class for debug panels."""
 
     name = None
     template = None
     has_content = True
 
     def __init__(self, app, request=None):
-        """ Store current request. """
+        """Store current request."""
         self.app = app
         self.request = request
 
@@ -37,24 +37,26 @@ class DebugPanel:
 
     @property
     def title(self):
-        """ Get a panel title. """
+        """Provide a panel title."""
         return self.name
 
     @property
     def nav_title(self):
-        """ Get a navigation title. """
+        """Provide a navigation title."""
         return self.title
 
-    def wrap_handler(self, handler, context_switcher):
+    @staticmethod
+    def wrap_handler(handler, context_switcher):
+        """Wrap handler to additional logic layer."""
         return handler
 
     @asyncio.coroutine
     def process_response(self, response):
-        """ Process a response. """
+        """Process a response."""
         pass
 
     def render_content(self):
-        """ Render the panel's content. """
+        """Render the panel's content."""
         if not self.has_content:
             return ""
         template = self.template
@@ -64,43 +66,44 @@ class DebugPanel:
         content = template.render(app=self.app, request=self.request, **context)
         return content
 
-    def render_vars(self):
-        """ Template Context. """
+    @staticmethod
+    def render_vars():
+        """Provide template's context."""
         return {}
 
 
 class HeaderDebugPanel(DebugPanel):
 
-    """ A panel to display HTTP request and response headers. """
+    """A panel to display HTTP request and response headers."""
 
     name = 'HTTP Headers'
     template = 'debugtoolbar/panels/headers.html'
 
     def __init__(self, app, request):
-        """ Store current requests headers. """
+        """Store current requests headers."""
         super().__init__(app, request)
         self.request_headers = [(k, v) for k, v in sorted(request.headers.items())]
         self.response_headers = None
 
     @asyncio.coroutine
     def process_response(self, response):
-        """ Store response headers. """
+        """Store response headers."""
         self.response_headers = [(k, v) for k, v in sorted(response.headers.items())]
 
     def render_vars(self):
-        """ Template context variables. """
+        """Template context variables."""
         return dict(response_headers=self.response_headers, request_headers=self.request_headers)
 
 
 class RoutesDebugPanel(DebugPanel):
 
-    """ A panel to display the routes used by your Muffin application. """
+    """A panel to display the routes used by your Muffin application."""
 
     name = 'Routes'
     template = 'debugtoolbar/panels/routes.html'
 
     def __init__(self, app, request=None):
-        """ Get routes. """
+        """Get routes."""
         super().__init__(app, request)
         self.routes = []
         router = app.router
@@ -108,12 +111,12 @@ class RoutesDebugPanel(DebugPanel):
         for route in router._urls:
             if not route.name or route.name.startswith('debugtoolbar.'):
                 continue
-            pattern = None
+            pattern = ''
             if isinstance(route, web.DynamicRoute):
                 pattern = route._formatter
             elif isinstance(route, web.StaticRoute):
                 pattern = route._prefix
-            else:
+            elif isinstance(route, web.PlainRoute):
                 pattern = route._path
 
             self.routes.append({
@@ -124,13 +127,13 @@ class RoutesDebugPanel(DebugPanel):
             })
 
     def render_vars(self):
-        """ Template Context. """
+        """Template Context."""
         return {'routes': self.routes}
 
 
 class ConfigurationDebugPanel(DebugPanel):
 
-    """ Render app config. """
+    """Render app config."""
 
     name = 'Configuration'
     has_content = True
@@ -139,13 +142,14 @@ class ConfigurationDebugPanel(DebugPanel):
 
 class VersionsDebugPanel(DebugPanel):
 
-    """ Render python packages versions. """
+    """Render python packages versions."""
 
     name = 'Versions'
     has_content = True
     template = 'debugtoolbar/panels/versions.html'
 
     def __init__(self, app, request=None):
+        """Get environment meta information."""
         super(VersionsDebugPanel, self).__init__(app, request)
         self.platform = platform.platform()
         self.packages = []
@@ -172,6 +176,7 @@ class VersionsDebugPanel(DebugPanel):
         self.packages = sorted(self.packages, key=itemgetter('lowername'))
 
     def render_vars(self):
+        """Provide template's context."""
         return {
             'platform': self.platform,
             'packages': self.packages,
@@ -180,10 +185,14 @@ class VersionsDebugPanel(DebugPanel):
 
 
 class MiddlewaresDebugPanel(DebugPanel):
+
+    """Information about enabled middlewares."""
+
     name = 'Middleware Factories'
     template = 'debugtoolbar/panels/middlewares.html'
 
     def __init__(self, app, request=None):
+        """Initialize the panel."""
         super(MiddlewaresDebugPanel, self).__init__(app, request)
         self.middlewares = []
         for mf in reversed(app._middlewares):
@@ -193,6 +202,7 @@ class MiddlewaresDebugPanel(DebugPanel):
             self.has_content = False
 
     def render_vars(self):
+        """Provide template's context."""
         return {'middlewares': self.middlewares}
 
 
@@ -286,4 +296,4 @@ class LoggingDebugPanel(DebugPanel):
         }
 
 
-# pylama:ignore=D
+# pylama:ignore=W0212,W0201

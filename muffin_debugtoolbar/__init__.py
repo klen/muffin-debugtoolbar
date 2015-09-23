@@ -1,7 +1,4 @@
-"""
-    muffin-debugtoolbar description.
-
-"""
+"""Muffin-DebugToolbar -- Plugin for Muffin-Framework for debugging applications."""
 
 # Package information
 # ===================
@@ -11,4 +8,4 @@ __project__ = "muffin-debugtoolbar"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
 
-from .plugin import Plugin
+from .plugin import Plugin # noqa

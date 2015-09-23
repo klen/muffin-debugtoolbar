@@ -1,18 +1,19 @@
-""" Debug Toolbar Plugin. """
-
+"""Debug Toolbar Plugin."""
 import asyncio
 import importlib
 import ipaddress as ip
 import os.path as op
-import uuid
-from .tbtools.tbtools import get_traceback
-import sys
 import re
-import ujson as json
+import sys
+import uuid
 
+import ujson as json
 from muffin import Response, StaticRoute, HTTPException, HTTPBadRequest
 from muffin.plugins import BasePlugin, PluginException
+
 from . import panels, utils
+from .tbtools.tbtools import get_traceback
+
 
 RE_BODY = re.compile(b'<\/body>', re.I)
 U_SSE_PAYLOAD = "id: {0}\nevent: new_request\ndata: {1}\n\n"
@@ -24,7 +25,7 @@ PLUGIN_ROOT = op.dirname(op.abspath(__file__))
 
 class Plugin(BasePlugin):
 
-    """ Debug Toolbar for Muffin framework. """
+    """The plugin implementation."""
 
     name = 'debugtoolbar'
     defaults = {
@@ -50,7 +51,7 @@ class Plugin(BasePlugin):
     }
 
     def setup(self, app):
-        """ Initialize the application. """
+        """Setup the plugin and prepare application."""
         super(Plugin, self).setup(app)
 
         if 'jinja2' not in app.plugins:
@@ -63,14 +64,14 @@ class Plugin(BasePlugin):
         app.ps.jinja2.cfg.template_folders.append(op.join(PLUGIN_ROOT, 'templates'))
 
         self.cfg.panels += list(self.cfg.additional_panels)
-        panels = []
+        panels_ = []
         for panel in self.cfg.panels:
             if isinstance(panel, str):
                 mod, _, panel = panel.partition(':')
                 mod = importlib.import_module(mod)
                 panel = eval(panel or 'DebugPanel', mod.__dict__)
-            panels.append(panel)
-        self.cfg.panels = panels
+            panels_.append(panel)
+        self.cfg.panels = panels_
 
         # Setup debugtoolbar static files
         app.router.register_route(StaticRoute(
@@ -221,7 +222,7 @@ class Plugin(BasePlugin):
         if not token:
             raise HTTPBadRequest(text='No token in request')
 
-        if not (token == request.app['debugtoolbar']['pdbt_token']):
+        if token != request.app['debugtoolbar']['pdbt_token']:
             raise HTTPBadRequest(text='Bad token in request')
 
     def get_frame(self, request):
