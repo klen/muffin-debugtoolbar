@@ -17,10 +17,75 @@ from .tbtools.tbtools import get_traceback
 
 RE_BODY = re.compile(b'<\/body>', re.I)
 U_SSE_PAYLOAD = "id: {0}\nevent: new_request\ndata: {1}\n\n"
-REDIRECT_CODES = (301, 302, 303, 304)
+REDIRECT_CODES = (300, 301, 302, 303, 305, 307, 308)
 
 
 PLUGIN_ROOT = op.dirname(op.abspath(__file__))
+
+
+@asyncio.coroutine
+def debugtoolbar_middleware_factory(app, handler):
+    """Setup Debug middleware."""
+    dbtb = app.ps.debugtoolbar
+
+    @asyncio.coroutine
+    def debugtoolbar_middleware(request):
+        """Integrate to application."""
+
+        # Check for debugtoolbar is enabled for the request
+        if not dbtb.cfg.enabled or any(map(request.path.startswith, dbtb.cfg.exclude)):
+            return (yield from handler(request))
+
+        remote_host, remote_port = request.transport.get_extra_info('peername')
+        for host in dbtb.cfg.hosts:
+            if ip.ip_address(remote_host) in ip.ip_network(host):
+                break
+        else:
+            return (yield from handler(request))
+
+        # Initialize a debugstate for the request
+        state = DebugState(app, request)
+        dbtb.history[state.id] = state
+        context_switcher = state.wrap_handler(handler)
+
+        # Make response
+        try:
+            response = yield from context_switcher(handler(request))
+            state.status = response.status
+        except HTTPException as exc:
+            response = exc
+            state.status = response.status
+
+        except Exception as exc:
+            # Store traceback for unhandled exception
+            state.status = 500
+            if not dbtb.cfg.intercept_exc:
+                raise
+            tb = get_traceback(
+                info=sys.exc_info(), skip=1, show_hidden_frames=False,
+                ignore_system_exceptions=True, exc=exc)
+            dbtb.exceptions[tb.id] = request['pdbt_tb'] = tb
+            for frame in tb.frames:
+                dbtb.frames[id(frame)] = frame
+            response = Response(text=tb.render_full(request), content_type='text/html')
+
+        # Intercept http redirect codes and display an html page with a link to the target.
+        if dbtb.cfg.intercept_redirects and response.status in REDIRECT_CODES \
+                and 'Location' in response.headers:
+
+            response = yield from app.ps.jinja2.render(
+                'debugtoolbar/redirect.html', response=response)
+            response = Response(text=response, content_type='text/html')
+
+        yield from state.process_response(response)
+
+        if isinstance(response, Response) and response.content_type == 'text/html' and \
+                RE_BODY.search(response.body):
+            return (yield from dbtb.inject(state, response))
+
+        return response
+
+    return debugtoolbar_middleware
 
 
 class Plugin(BasePlugin):
@@ -100,69 +165,8 @@ class Plugin(BasePlugin):
     @asyncio.coroutine
     def start(self, app):
         """ Start application. """
+        app.middlewares.insert(0, debugtoolbar_middleware_factory)
         self.global_panels = [Panel(self.app) for Panel in self.cfg.global_panels]
-
-    @asyncio.coroutine
-    def middleware_factory(self, app, handler):
-        """ Setup Debug middleware. """
-        @asyncio.coroutine
-        def middleware(request):
-            """ Integrate to application. """
-
-            # Check for debugtoolbar is enabled for the request
-            if not self.cfg.enabled or any(map(request.path.startswith, self.cfg.exclude)):
-                return (yield from handler(request))
-
-            remote_host, remote_port = request.transport.get_extra_info('peername')
-            for host in self.cfg.hosts:
-                if ip.ip_address(remote_host) in ip.ip_network(host):
-                    break
-            else:
-                return (yield from handler(request))
-
-            # Initialize a debugstate for the request
-            state = DebugState(self.app, request)
-            self.history[state.id] = state
-            context_switcher = state.wrap_handler(handler)
-
-            # Make response
-            try:
-                response = yield from context_switcher(handler(request))
-                state.status = response.status
-            except HTTPException as exc:
-                response = exc
-                state.status = response.status
-
-            except Exception as exc:
-                # Store traceback for unhandled exception
-                state.status = 500
-                if not self.cfg.intercept_exc:
-                    raise
-                tb = get_traceback(
-                    info=sys.exc_info(), skip=1, show_hidden_frames=False,
-                    ignore_system_exceptions=True, exc=exc)
-                self.exceptions[tb.id] = request['pdbt_tb'] = tb
-                for frame in tb.frames:
-                    self.frames[id(frame)] = frame
-                response = Response(text=tb.render_full(request), content_type='text/html')
-
-            # Intercept http redirect codes and display an html page with a link to the target.
-            if self.cfg.intercept_redirects and response.status in REDIRECT_CODES \
-                    and 'Location' in response.headers:
-
-                response = yield from self.app.ps.jinja2.render(
-                    'debugtoolbar/redirect.html', response=response)
-                response = Response(text=response, content_type='text/html')
-
-            yield from state.process_response(response)
-
-            if isinstance(response, Response) and response.content_type == 'text/html' and \
-                    RE_BODY.search(response.body):
-                return (yield from self.inject(state, response))
-
-            return response
-
-        return middleware
 
     @asyncio.coroutine
     def inject(self, state, response):

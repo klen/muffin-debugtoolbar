@@ -198,9 +198,6 @@ class MiddlewaresDebugPanel(DebugPanel):
         for mf in reversed(app._middlewares):
             self.middlewares.append(mf.__repr__())
 
-        if not self.middlewares:
-            self.has_content = False
-
     def render_vars(self):
         """Provide template's context."""
         return {'middlewares': self.middlewares}
