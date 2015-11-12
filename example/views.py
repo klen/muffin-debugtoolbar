@@ -3,6 +3,11 @@ import logging
 from example import app, muffin
 
 
+@app.ps.debugtoolbar.authorization
+def authorize(request):
+    return False
+
+
 @app.register('/')
 def index(request):
     """ Just sample. """

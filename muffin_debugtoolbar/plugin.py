@@ -8,7 +8,8 @@ import sys
 import uuid
 
 import ujson as json
-from muffin import Response, StaticRoute, HTTPException, HTTPBadRequest
+from muffin import (
+    Response, StaticRoute, HTTPException, HTTPBadRequest, to_coroutine, HTTPForbidden)
 from muffin.plugins import BasePlugin, PluginException
 
 from . import panels, utils
@@ -181,9 +182,13 @@ class Plugin(BasePlugin):
         return response
 
     @asyncio.coroutine
-    def view(self, req):
+    def view(self, request):
         """ Debug Toolbar. """
-        request_id = req.match_info.get('request_id')
+        auth = yield from self.authorize(request)
+        if not auth:
+            raise HTTPForbidden()
+
+        request_id = request.match_info.get('request_id')
         state = self.history.get(request_id, None)
 
         response = yield from self.app.ps.jinja2.render(
@@ -198,8 +203,29 @@ class Plugin(BasePlugin):
         return Response(text=response, content_type='text/html')
 
     @asyncio.coroutine
+    def authorize(self, request):  # noqa
+        """Default authorization."""
+        return True
+
+    def authorization(self, func):
+        """Define a authorization handler.
+
+        ::
+            debugtoolbar = muffin_debugtoolbar.Plugin()
+            debugtoolbar.setup(app)
+
+            @debugtoolbar.authorization
+            def current_user_is_logged(request):
+                user = yield from load_session(request)
+                return user
+
+        """
+        self.authorize = to_coroutine(func)
+        return func
+
+    @asyncio.coroutine
     def sse(self, request):
-        """ SSE. """
+        """SSE."""
         response = Response(status=200)
         response.content_type = 'text/event-stream'
         response.text = ''
@@ -268,19 +294,19 @@ class DebugState:
     """ Store debug state. """
 
     def __init__(self, app, request):
-        """ Store the params. """
+        """Store the params."""
         self.request = request
         self.status = 200
         self.panels = [Panel(app, request) for Panel in app.ps.debugtoolbar.cfg.panels]
 
     @property
     def id(self):
-        """ Return state ID. """
+        """Return state ID."""
         return str(id(self))
 
     @property
     def json(self):
-        """ Return JSON. """
+        """Return JSON."""
         return {'method': self.request.method,
                 'path': self.request.path,
                 'scheme': 'http',
@@ -294,6 +320,6 @@ class DebugState:
 
     @asyncio.coroutine
     def process_response(self, response):
-        """ Process response. """
+        """Process response."""
         for panel in self.panels:
             yield from panel.process_response(response)
