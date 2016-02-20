@@ -10,7 +10,6 @@ from operator import itemgetter
 from pprint import saferepr
 
 import pkg_resources
-from aiohttp import web
 from muffin import __version__ as muffin_version
 
 from .tbtools.tbtools import Traceback
@@ -108,21 +107,14 @@ class RoutesDebugPanel(DebugPanel):
         self.routes = []
         router = app.router
 
-        for route in router._urls:
+        for route in router.routes():
             if not route.name or route.name.startswith('debugtoolbar.'):
                 continue
-            pattern = ''
-            if isinstance(route, web.DynamicRoute):
-                pattern = route._formatter
-            elif isinstance(route, web.StaticRoute):
-                pattern = route._prefix
-            elif isinstance(route, web.PlainRoute):
-                pattern = route._path
 
             self.routes.append({
                 "name": route.name,
                 "method": route.method,
-                "pattern": pattern,
+                "info": route.get_info().items(),
                 "handler": repr(route.handler)
             })
 

@@ -5,7 +5,7 @@ from example import app, muffin
 
 @app.ps.debugtoolbar.authorization
 def authorize(request):
-    return False
+    return True
 
 
 @app.register('/')
