@@ -1,2 +1,2 @@
 muffin          >= 0.6.0
-muffin_jinja2
+muffin_jinja2==0.2.0
