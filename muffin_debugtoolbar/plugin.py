@@ -7,10 +7,10 @@ import re
 import sys
 import uuid
 
-import ujson as json
 from muffin import (
     Response, StaticRoute, HTTPException, HTTPBadRequest, to_coroutine, HTTPForbidden)
 from muffin.plugins import BasePlugin, PluginException
+from muffin.utils import json
 
 from . import panels, utils
 from .tbtools.tbtools import get_traceback
