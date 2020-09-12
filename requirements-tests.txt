@@ -1,5 +1,5 @@
 -r requirements.txt
 -e .
 
-pytest
+pytest==6.0.2
 webtest
